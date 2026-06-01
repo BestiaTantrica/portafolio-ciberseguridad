@@ -1,0 +1,10 @@
+# Ignorar archivos PDF y materiales con derechos de autor en bibliografía
+bibliografia/*.pdf
+bibliografia/
+
+# Archivos del sistema y del editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
