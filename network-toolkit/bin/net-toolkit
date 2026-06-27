@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# ===================================================================
+# Archivo: net-toolkit
+# Responsabilidad: Orquestador principal (Entry Point).
+# Inicializa el entorno, importa el CORE y lanza la UI.
+# ===================================================================
+
+set -euo pipefail
+
+# 1. Determinar rutas base del proyecto (Uso seguro de variables y pwd)
+export TK_BASE_DIR
+TK_BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# 2. Cargar archivo de configuración global
+if [[ -f "${TK_BASE_DIR}/conf/toolkit.conf" ]]; then
+    # shellcheck disable=SC1091
+    source "${TK_BASE_DIR}/conf/toolkit.conf"
+else
+    echo "[!] Error crítico: No se encontró el archivo de configuración ${TK_BASE_DIR}/conf/toolkit.conf" >&2
+    exit 1
+fi
+
+# 3. Cargar motor de logging primario
+# shellcheck disable=SC1091
+source "${TK_BASE_DIR}/core/logger.sh"
+
+# 4. Validar estado general del sistema (Directorios, permisos, apps)
+# shellcheck disable=SC1091
+source "${TK_BASE_DIR}/core/validator.sh"
+tk_validate_env
+
+# 5. Cargar resto del CORE
+# shellcheck disable=SC1091
+source "${TK_BASE_DIR}/core/error_handler.sh"
+# shellcheck disable=SC1091
+source "${TK_BASE_DIR}/core/module_loader.sh"
+# shellcheck disable=SC1091
+source "${TK_BASE_DIR}/core/ui.sh"
+# shellcheck disable=SC1091
+source "${TK_BASE_DIR}/core/reporter.sh"
+
+# 6. Registrar captura de señales robusta
+trap 'tk_error_handler $? $LINENO "$BASH_COMMAND"' SIGINT SIGTERM ERR
+
+# 7. Inicio Oficial
+tk_log_info "----------------------------------------"
+tk_log_info "Iniciando Network Toolkit v${TK_VERSION:-1.0.0}"
+
+# 8. Auto-Descubrimiento de módulos
+tk_module_loader_scan
+
+# 9. Lanzar bucle de Interfaz de Usuario
+tk_ui_main_menu
+
+# 10. Cierre seguro
+tk_log_info "Cierre exitoso del sistema."
+exit 0

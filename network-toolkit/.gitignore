@@ -1,0 +1,8 @@
+logs/*
+!logs/.gitkeep
+reports/*
+!reports/.gitkeep
+tmp/*
+!tmp/.gitkeep
+.env
+*.swp
