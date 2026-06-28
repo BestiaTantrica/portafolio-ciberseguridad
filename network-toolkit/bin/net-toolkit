@@ -24,10 +24,12 @@ fi
 # shellcheck disable=SC1091
 source "${TK_BASE_DIR}/core/logger.sh"
 
-# 4. Validar estado general del sistema (Directorios, permisos, apps)
+# 4. Validar estado general del sistema (Omitir si es self-test para no abortar prematuramente)
 # shellcheck disable=SC1091
 source "${TK_BASE_DIR}/core/validator.sh"
-tk_validate_env
+if [[ "${1:-}" != "--self-test" ]]; then
+    tk_validate_env
+fi
 
 # 5. Cargar resto del CORE
 # shellcheck disable=SC1091
@@ -49,9 +51,20 @@ tk_log_info "Iniciando Network Toolkit v${TK_VERSION:-1.0.0}"
 # 8. Auto-Descubrimiento de módulos
 tk_module_loader_scan
 
-# 9. Lanzar bucle de Interfaz de Usuario
+# 9. Autodiagnóstico (Self-Test)
+if [[ "${1:-}" == "--self-test" ]]; then
+    # shellcheck disable=SC1091
+    source "${TK_BASE_DIR}/core/self_test.sh"
+    set +e
+    tk_run_self_test
+    ST_EXIT=$?
+    set -e
+    exit $ST_EXIT
+fi
+
+# 10. Lanzar bucle de Interfaz de Usuario
 tk_ui_main_menu
 
-# 10. Cierre seguro
+# 11. Cierre seguro
 tk_log_info "Cierre exitoso del sistema."
 exit 0
